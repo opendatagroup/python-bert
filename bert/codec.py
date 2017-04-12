@@ -77,6 +77,12 @@ class BERTDecoder(object):
             if 'dotall' in item[3]:
                 flags |= re.DOTALL
             return re.compile(item[2], flags)
+        elif bert_type == "complex":
+            return complex(item[2], item[3])
+        elif bert_type == "vector":
+            return tuple(self.convert(v) for v in item[2])
+        elif bert_type == "set":
+            return set(self.convert(v) for v in item[2])
         raise NotImplementedError("Unknown BERT type %s" % item[1])
 
 
