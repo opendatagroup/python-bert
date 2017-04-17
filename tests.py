@@ -5,6 +5,9 @@ import datetime
 import re
 import unittest
 
+import pandas as pd
+import numpy as np
+
 from bert import BERTDecoder, BERTEncoder, Atom
 from bert.codec import utc_to_datetime, datetime_to_utc
 
@@ -61,6 +64,21 @@ class BERTTestCase(unittest.TestCase):
         convert = BERTEncoder().convert
         for python, bert in self.bert_tests:
             self.assertEqual(bert, convert(python))
+
+    terms = [
+        ((1, 2), lambda a, b: a == b),
+        ((1 + 2j), lambda a, b:  a == b),
+        (set([1,2]), lambda a, b: a == b),
+        (pd.Series([1,2]), lambda a, b: a.equals(b)),
+        (pd.DataFrame(columns=['A', 'B'], data=[[1, 2], [3, 4]]), lambda a, b: a.equals(b)),
+        (pd.Categorical([1,1,2], categories=[1,2]), lambda a, b: a.equals(b)),
+        (np.matrix([[1,2],[3,4],[5,6]]), lambda a, b: (a == b).all()),
+        (np.array([[1,2,3],[4,5,6]]), lambda a, b: (a == b).all())
+    ]
+
+    def testTerms(self):
+        for a, equal in self.terms:
+            self.assertTrue(equal(a, BERTDecoder().convert(BERTEncoder().convert(a))))
 
 if __name__ == '__main__':
     unittest.main()

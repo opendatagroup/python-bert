@@ -2,6 +2,8 @@
 import datetime
 import re
 import time
+import pandas as pd
+import numpy as np
 
 from erlastic import ErlangTermDecoder, ErlangTermEncoder, Atom
 
@@ -83,6 +85,24 @@ class BERTDecoder(object):
             return tuple(self.convert(v) for v in item[2])
         elif bert_type == "set":
             return set(self.convert(v) for v in item[2])
+        elif bert_type == "series":
+            return pd.Series(self.convert(v) for v in item[2])
+        elif bert_type == "dataframe":
+            return pd.DataFrame(
+                columns=[self.convert(v) for v in item[2]],
+                data=[self.convert(v) for v in item[3]]
+            )
+        elif bert_type == "factor":
+            return pd.Categorical(
+                [self.convert(v) for v in item[2]],
+                categories=[self.convert(v) for v in item[3]]
+            )
+        elif bert_type == "matrix":
+            data = [self.convert(v) for v in item[3]]
+            dim = [self.convert(v) for v in item[2]]
+            return np.matrix(data).reshape(dim)
+        elif bert_type == "array":
+            return np.array([self.convert(v) for v in item[3]]).reshape([self.convert(v) for v in item[2]])
         raise NotImplementedError("Unknown BERT type %s" % item[1])
 
 
@@ -127,6 +147,30 @@ class BERTEncoder(object):
             if obj.flags & re.DOTALL:
                 options.append(Atom('dotall'))
             return (Atom("bert"), Atom("regex"), obj.pattern, tuple(options))
+        elif isinstance(obj, complex):
+            return (Atom("bert"), Atom("complex"), obj.real, obj.imag)
+        elif isinstance(obj, set):
+            return (Atom("bert"), Atom("set"),
+                [self.convert(item) for item in obj]
+            )
+        elif isinstance(obj, pd.Series):
+            return (Atom("bert"), Atom("series"),
+                [self.convert(item) for item in obj]
+            )
+        elif isinstance(obj, pd.DataFrame):
+            return (Atom("bert"), Atom("dataframe"),
+                [self.convert(item) for item in obj.columns],
+                [self.convert(item) for item in obj.values]
+            )
+        elif isinstance(obj, pd.Categorical):
+            return (Atom("bert"), Atom("factor"),
+                [self.convert(item) for item in obj],
+                [self.convert(item) for item in obj.categories]
+            )
+        elif isinstance(obj, np.matrix):
+            return (Atom("bert"), Atom("matrix"), obj.shape, obj.tolist())
+        elif isinstance(obj, np.ndarray):
+            return (Atom("bert"), Atom("array"), obj.shape, obj.tolist())
         return obj
 
     def __is_ascii(self, s):
