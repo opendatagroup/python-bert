@@ -98,11 +98,13 @@ class BERTDecoder(object):
                 categories=[self.convert(v) for v in item[3]]
             )
         elif bert_type == "matrix":
-            data = [self.convert(v) for v in item[3]]
             dim = [self.convert(v) for v in item[2]]
+            data = [self.convert(v) for v in item[3]]
             return np.matrix(data).reshape(dim)
         elif bert_type == "array":
-            return np.array([self.convert(v) for v in item[3]]).reshape([self.convert(v) for v in item[2]])
+            dim = [self.convert(v) for v in item[2]]
+            data = [self.convert(v) for v in item[3]]
+            return np.array(data).reshape(dim)
         raise NotImplementedError("Unknown BERT type %s" % item[1])
 
 
