@@ -12,7 +12,7 @@ setup(
     author_email = 'samuel@descolada.com',
     url = 'https://github.com/samuel/python-bert',
     packages = ['bert'],
-    install_requires = ["basho-erlastic"],
+    install_requires = ["basho-erlastic", "pandas"],
     classifiers = [
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
